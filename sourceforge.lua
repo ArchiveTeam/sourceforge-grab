@@ -9,6 +9,8 @@ local item_value = os.getenv('item_value')
 local downloaded = {}
 local addedtolist = {}
 
+local nored = {}
+
 read_file = function(file)
   if file then
     local f = assert(io.open(file))
@@ -23,7 +25,7 @@ end
 wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_parsed, iri, verdict, reason)
   local url = urlpos["url"]["url"]
   local html = urlpos["link_expect_html"]
-  local itemvalue = string.gsub(item_value, "%-", "%%%-")
+  local itemvalue = string.gsub(item_value, "%-", "%%-")
   
   if downloaded[url] == true or addedtolist[url] == true then
     return false
@@ -43,7 +45,7 @@ end
 wget.callbacks.get_urls = function(file, url, is_css, iri)
   local urls = {}
   local html = nil
-  local itemvalue = string.gsub(item_value, "%-", "%%%-")
+  local itemvalue = string.gsub(item_value, "%-", "%%-")
   
   local function check(url)
     if (downloaded[url] ~= true and addedtolist[url] ~= true) then
@@ -55,6 +57,14 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   if string.match(url, item_value) then
     if string.match(url, "/p/"..itemvalue) or string.match(url, "/projects/"..itemvalue) or string.match(url, itemvalue.."%.sourceforge%.net") then
       html = read_file(file)
+      if string.match(url, "/projects/"..itemvalue) then
+        nored = string.gsub(url, "/projects/"..itemvalue, "/p/"..item_value)
+        check(string.gsub(url, "/projects/"..itemvalue, "/p/"..item_value))
+      end
+      if string.match(url, "/p/"..itemvalue) then
+        nored = string.gsub(url, "/p/"..itemvalue, "/projects/"..item_value)
+        check(string.gsub(url, "/p/"..itemvalue, "/projects/"..item_value))
+      end
       for endnum in string.gmatch(url, "/"..itemvalue.."/bugs/([0-9]+)")
         local linksort = string.match(url, "/"..itemvalue.."/([^/]+)/[0-9]+")
         if linksort == "bugs" or linksort == "patches" or linksort == "changes" or linksort == "feature-requests" then
@@ -63,7 +73,27 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
           end
         end
       end
-      for newurl in string.gmatch(html, ""
+      for newurl in string.gmatch(html, '"(/[^"]+)"') do
+        if string.match(newurl, itemvalue) then
+          check("http://sourceforge.net"..newurl)
+        end
+      end
+      for newurl in string.gmatch(html, "'(/[^']+)'") do
+        if string.match(newurl, itemvalue) then
+          check("http://sourceforge.net"..newurl)
+        end
+      end
+      for newurl in string.gmatch(html, '"(https?://[^"]+)"') do
+        if string.match(newurl, itemvalue) or string.match(newurl, "fsdn%.com") then
+          check(newurl)
+        end
+      end
+      for newurl in string.gmatch(html, "'(https?://[^']+)'") do
+        if string.match(newurl, itemvalue) or string.match(newurl, "fsdn%.com") then
+          check(newurl)
+        end
+      end
+    end
   end
   
   return urls
@@ -88,15 +118,11 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
     end
   end
   
-  if status_code == 400 then
-    io.stdout:write("\nServer returned "..http_stat.statcode..". Sleeping.\n")
-    io.stdout:flush()
-
-    os.execute("sleep 3")
-    
-    tries = tries + 1
-
-    if status_code >= 500 or
+  if nored[url["url"]] == true then
+    return wget.actions.EXIT
+  end
+  
+  if status_code >= 500 or
     (status_code >= 400 and status_code ~= 404 and status_code ~= 403 and status_code ~= 400) then
 
     io.stdout:write("\nServer returned "..http_stat.statcode..". Sleeping.\n")
