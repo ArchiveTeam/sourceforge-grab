@@ -87,7 +87,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
         local linksort = string.match(url, "/"..itemvalue.."/([^/]+)/[0-9]+")
         if linksort == "bugs" or linksort == "patches" or linksort == "changes" or linksort == "feature-requests" or linksort == "support-requests" then
           while tonumber(num) >= 0 do
-            check("http://sourceforge.net/p/"..item_value.."/"..linksort.."/"..tostring(num))
+            check("http://sourceforge.net/p/"..item_value.."/"..linksort.."/"..tostring(num).."/")
             num = tonumber(num) - 1
           end
         end
