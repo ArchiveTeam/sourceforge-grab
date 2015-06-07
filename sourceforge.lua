@@ -10,6 +10,7 @@ local downloaded = {}
 local addedtolist = {}
 
 local nored = {}
+local noretry = {}
 
 read_file = function(file)
   if file then
@@ -30,8 +31,12 @@ wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_pars
   if downloaded[url] == true or addedtolist[url] == true then
     return false
   end
+
+  if string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_ew_/") and string.match(url, "fsdn%.com")) or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com")) then
+    return false
+  end
   
-  if (downloaded[url] ~= true or addedtolist[url] ~= true) then
+  if (downloaded[url] ~= true or addedtolist[url] ~= true) and not (string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_ew_/") and string.match(url, "fsdn%.com")) or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com"))) then
     if string.match(url, "/p/"..itemvalue) or string.match(url, "/projects/"..itemvalue) or string.match(url, itemvalue.."%.sourceforge%.net") or html == 0 then
       addedtolist[url] = true
       return true
@@ -41,55 +46,77 @@ wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_pars
   end
 end
 
-
 wget.callbacks.get_urls = function(file, url, is_css, iri)
   local urls = {}
   local html = nil
   local itemvalue = string.gsub(item_value, "%-", "%%-")
-  
+
   local function check(url)
-    if (downloaded[url] ~= true and addedtolist[url] ~= true) then
-      table.insert(urls, { url=url })
-      addedtolist[url] = true
+    if (downloaded[url] ~= true and addedtolist[url] ~= true) and not (string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_ew_/") and string.match(url, "fsdn%.com")) or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com"))) then
+      if string.match(url, "&amp;") then
+        table.insert(urls, { url=string.gsub(url, "&amp;", "&") })
+        addedtolist[url] = true
+        addedtolist[string.gsub(url, "&amp;", "&")] = true
+      else
+      	table.insert(urls, { url=url })
+      	addedtolist[url] = true
+      end
     end
   end
   
   if string.match(url, item_value) then
     if string.match(url, "/p/"..itemvalue) or string.match(url, "/projects/"..itemvalue) or string.match(url, itemvalue.."%.sourceforge%.net") then
       html = read_file(file)
-      if string.match(url, "/projects/"..itemvalue) then
-        nored = string.gsub(url, "/projects/"..itemvalue, "/p/"..item_value)
-        check(string.gsub(url, "/projects/"..itemvalue, "/p/"..item_value))
+      if string.match(string.match(url, "(https?://.+/)"), itemvalue) and not string.match(url, "https?://[a-z]+%.fsdn%.com") then
+        noretry[string.match(url, "(https?://.+/)")] = true
+        check(string.match(url, "(https?://.+/)"))
       end
-      if string.match(url, "/p/"..itemvalue) then
-        nored = string.gsub(url, "/p/"..itemvalue, "/projects/"..item_value)
-        check(string.gsub(url, "/p/"..itemvalue, "/projects/"..item_value))
+      if string.match(url, "(https?://.+/)[^/]+/") and string.match(string.match(url, "(https?://.+/)[^/]+/"), itemvalue) and not string.match(url, "https?://[a-z]+%.fsdn%.com") then
+        noretry[string.match(url, "(https?://.+/)[^/]+/")] = true
+        check(string.match(url, "(https?://.+/)[^/]+/"))
       end
-      for endnum in string.gmatch(url, "/"..itemvalue.."/bugs/([0-9]+)")
+--      if string.match(url, "/projects/"..itemvalue) then
+--        nored[string.gsub(url, "/projects/"..itemvalue, "/p/"..item_value)] = true
+--        check(string.gsub(url, "/projects/"..itemvalue, "/p/"..item_value))
+--      end
+--      if string.match(url, "/p/"..itemvalue) then
+--        nored[string.gsub(url, "/p/"..itemvalue, "/projects/"..item_value)] = true
+--        check(string.gsub(url, "/p/"..itemvalue, "/projects/"..item_value))
+--      end
+      for num in string.gmatch(url, "/"..itemvalue.."/[^/]+/([0-9]+)") do
         local linksort = string.match(url, "/"..itemvalue.."/([^/]+)/[0-9]+")
-        if linksort == "bugs" or linksort == "patches" or linksort == "changes" or linksort == "feature-requests" then
-          for num in range(bugnum) do
-            check("http://sourceforge.net/p/"..item_value.."/"..linksort.."/"..num)
+        if linksort == "bugs" or linksort == "patches" or linksort == "changes" or linksort == "feature-requests" or linksort == "support-requests" then
+          while tonumber(num) >= 0 do
+            check("http://sourceforge.net/p/"..item_value.."/"..linksort.."/"..tostring(num))
+            num = tonumber(num) - 1
           end
         end
       end
-      for newurl in string.gmatch(html, '"(/[^"]+)"') do
-        if string.match(newurl, itemvalue) then
-          check("http://sourceforge.net"..newurl)
+      for newurl in string.gmatch(html, '("/[^"]+)"') do
+        if string.match(newurl, '"//') then
+          if (string.match(newurl, itemvalue) and string.match(newurl, "sourceforge%.net")) or string.match(newurl, "fsdn%.com") then
+            check(string.gsub(newurl, '"//', 'http://'))
+          end
+        elseif string.match(newurl, itemvalue) then
+          check("http://sourceforge.net"..string.match(newurl, '"(/.+)'))
         end
       end
-      for newurl in string.gmatch(html, "'(/[^']+)'") do
-        if string.match(newurl, itemvalue) then
-          check("http://sourceforge.net"..newurl)
+      for newurl in string.gmatch(html, "('/[^']+)'") do
+        if string.match(newurl, "'//") then
+          if (string.match(newurl, itemvalue) and string.match(newurl, "sourceforge%.net")) or string.match(newurl, "fsdn%.com") then
+            check(string.gsub(newurl, "'//", "http://"))
+          end
+        elseif string.match(newurl, itemvalue) then
+          check("http://sourceforge.net"..string.match(newurl, "'(/.+)"))
         end
       end
       for newurl in string.gmatch(html, '"(https?://[^"]+)"') do
-        if string.match(newurl, itemvalue) or string.match(newurl, "fsdn%.com") then
+        if (string.match(newurl, itemvalue) and string.match(newurl, "sourceforge%.net")) or string.match(newurl, "fsdn%.com") then
           check(newurl)
         end
       end
       for newurl in string.gmatch(html, "'(https?://[^']+)'") do
-        if string.match(newurl, itemvalue) or string.match(newurl, "fsdn%.com") then
+        if (string.match(newurl, itemvalue) and string.match(newurl, "sourceforge%.net")) or string.match(newurl, "fsdn%.com") then
           check(newurl)
         end
       end
@@ -118,12 +145,17 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
     end
   end
   
-  if nored[url["url"]] == true then
+  if nored[url["url"]] == true or noretry[url["url"]] == true then
     return wget.actions.EXIT
   end
   
-  if status_code >= 500 or
-    (status_code >= 400 and status_code ~= 404 and status_code ~= 403 and status_code ~= 400) then
+  if status_code == 405 then
+    return wget.actions.EXIT
+  elseif status_code >= 500 or
+    (status_code >= 400 and status_code ~= 404 and status_code ~= 403 and status_code ~= 400 and status_code ~= 405) then
+    if string.match(url["url"], "fsdn%.com") or string.match(url["url"], "/_list/") then
+      return wget.actions.EXIT
+    end
 
     io.stdout:write("\nServer returned "..http_stat.statcode..". Sleeping.\n")
     io.stdout:flush()
@@ -132,7 +164,7 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
 
     tries = tries + 1
 
-    if tries >= 15 then
+    if tries >= 7 then
       io.stdout:write("\nI give up...\n")
       io.stdout:flush()
       tries = 0
@@ -141,7 +173,9 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
       return wget.actions.CONTINUE
     end
   elseif status_code == 0 then
-
+    if string.match(url["url"], "fsdn%.com") then
+      return wget.actions.EXIT
+    end
     io.stdout:write("\nServer returned "..http_stat.statcode..". Sleeping.\n")
     io.stdout:flush()
 
@@ -149,7 +183,7 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
     
     tries = tries + 1
 
-    if tries >= 10 then
+    if tries >= 7 then
       io.stdout:write("\nI give up...\n")
       io.stdout:flush()
       tries = 0
