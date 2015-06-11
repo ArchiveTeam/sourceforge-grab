@@ -33,11 +33,11 @@ wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_pars
     return false
   end
 
-  if string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com")) or string.match(url, "%.dl%.sourceforge%.net/") then
+  if string.match(url, "%?r=http.+%?r=http") or string.match(url, "&r=http.+&r=http") or string.match(url, "%%26r%%3Dhttp.+%%26r%%3Dhttp") or string.match(url, "&r=http.+%%26r%%3Dhttp") or string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com")) or string.match(url, "%.dl%.sourceforge%.net/") then
     return false
   end
   
-  if (downloaded[url] ~= true or addedtolist[url] ~= true) and not (string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com")) or string.match(url, "%.dl%.sourceforge%.net/")) then
+  if (downloaded[url] ~= true or addedtolist[url] ~= true) and not (string.match(url, "%?r=http.+%?r=http") or string.match(url, "&r=http.+&r=http") or string.match(url, "%%26r%%3Dhttp.+%%26r%%3Dhttp") or string.match(url, "&r=http.+%%26r%%3Dhttp") or string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com")) or string.match(url, "%.dl%.sourceforge%.net/")) then
     if string.match(url, "/p/"..itemvalue) or string.match(url, "/projects/"..itemvalue) or string.match(url, itemvalue.."%.sourceforge%.net") or html == 0 then
       addedtolist[url] = true
       return true
@@ -59,7 +59,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
         addedtolist[url] = true
         downloadslist[string.match(url, "(%.dl%.sourceforge%.net/.+)")] = true
       end
-    elseif (downloaded[url] ~= true and addedtolist[url] ~= true) and not (string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com"))) then
+    elseif (downloaded[url] ~= true and addedtolist[url] ~= true) and not (string.match(url, "%?r=http.+%?r=http") or string.match(url, "&r=http.+&r=http") or string.match(url, "%%26r%%3Dhttp.+%%26r%%3Dhttp") or string.match(url, "&r=http.+%%26r%%3Dhttp") or string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com"))) then
       if string.match(url, "&amp;") then
         table.insert(urls, { url=string.gsub(url, "&amp;", "&") })
         addedtolist[url] = true
