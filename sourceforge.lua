@@ -3,6 +3,7 @@ dofile("table_show.lua")
 
 local url_count = 0
 local tries = 0
+local added_urls = 5
 local item_type = os.getenv('item_type')
 local item_value = os.getenv('item_value')
 
@@ -29,17 +30,18 @@ wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_pars
   local html = urlpos["link_expect_html"]
   local itemvalue = string.gsub(item_value, "%-", "%%%-")
   
-  if downloaded[url] == true or addedtolist[url] == true or string.match(url, "%.dl%.sourceforge%.net/") then
+  if downloaded[url] == true or addedtolist[url] == true then
     return false
   end
 
-  if string.match(url, "%?r=http.+%?r=http") or string.match(url, "&r=http.+&r=http") or string.match(url, "%%26r%%3Dhttp.+%%26r%%3Dhttp") or string.match(url, "&r=http.+%%26r%%3Dhttp") or string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com")) or string.match(url, "%.dl%.sourceforge%.net/") then
+  if string.match(url, "%?r=http.+%?r=http") or string.match(url, "&r=http.+&r=http") or string.match(url, "%%26r%%3Dhttp.+%%26r%%3Dhttp") or string.match(url, "&r=http.+%%26r%%3Dhttp") or string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com")) or (string.match(url, "/1433869845/_ew_/") and string.match(url, "fsdn%.com")) then
     return false
   end
   
-  if (downloaded[url] ~= true or addedtolist[url] ~= true) and not (string.match(url, "%?r=http.+%?r=http") or string.match(url, "&r=http.+&r=http") or string.match(url, "%%26r%%3Dhttp.+%%26r%%3Dhttp") or string.match(url, "&r=http.+%%26r%%3Dhttp") or string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com")) or string.match(url, "%.dl%.sourceforge%.net/")) then
+  if (downloaded[url] ~= true or addedtolist[url] ~= true) and not (string.match(url, "%?r=http.+%?r=http") or string.match(url, "&r=http.+&r=http") or string.match(url, "%%26r%%3Dhttp.+%%26r%%3Dhttp") or string.match(url, "&r=http.+%%26r%%3Dhttp") or string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com")) or (string.match(url, "/1433869845/_ew_/") and string.match(url, "fsdn%.com"))) then
     if string.match(url, "/p/"..itemvalue) or string.match(url, "/projects/"..itemvalue) or string.match(url, itemvalue.."%.sourceforge%.net") or html == 0 then
       addedtolist[url] = true
+      added_urls = added_urls + 1
       return true
     else
       return false
@@ -53,18 +55,14 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   local itemvalue = string.gsub(item_value, "%-", "%%%-")
 
   local function check(url)
-    if string.match(url, "%.dl%.sourceforge%.net/") then
-      if (downloaded[url] ~= true and addedtolist[url] ~= true and downloadslist[string.match(url, "(%.dl%.sourceforge%.net/.+)")] ~= true) then
-        table.insert(urls, { url=url })
-        addedtolist[url] = true
-        downloadslist[string.match(url, "(%.dl%.sourceforge%.net/.+)")] = true
-      end
-    elseif (downloaded[url] ~= true and addedtolist[url] ~= true) and not (string.match(url, "%?r=http.+%?r=http") or string.match(url, "&r=http.+&r=http") or string.match(url, "%%26r%%3Dhttp.+%%26r%%3Dhttp") or string.match(url, "&r=http.+%%26r%%3Dhttp") or string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com"))) then
+    if (downloaded[url] ~= true and addedtolist[url] ~= true) and not (string.match(url, "%?r=http.+%?r=http") or string.match(url, "&r=http.+&r=http") or string.match(url, "%%26r%%3Dhttp.+%%26r%%3Dhttp") or string.match(url, "&r=http.+%%26r%%3Dhttp") or string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com")) or (string.match(url, "/1433869845/_ew_/") and string.match(url, "fsdn%.com"))) then
       if string.match(url, "&amp;") then
         table.insert(urls, { url=string.gsub(url, "&amp;", "&") })
+        added_urls = added_urls + 1
         addedtolist[url] = true
         addedtolist[string.gsub(url, "&amp;", "&")] = true
       else
+        added_urls = added_urls + 1
       	table.insert(urls, { url=url })
       	addedtolist[url] = true
       end
@@ -127,8 +125,8 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
           check(newurl)
         end
       end
-      if string.match(url, "//") then
-        check(string.gsub(url, "//", "/"))
+      if string.match(string.match(url, "https?://(.+)"), "//") then
+        check(string.match(url, "(https?://).+")..string.gsub(string.match(url, "https?://(.+)"), "//", "/"))
       end
     end
   end
@@ -143,7 +141,7 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
   status_code = http_stat["statcode"]
   
   url_count = url_count + 1
-  io.stdout:write(url_count .. "=" .. status_code .. " " .. url["url"] .. ".  \n")
+  io.stdout:write(url_count.."/"..added_urls.." = "..status_code.." "..url["url"].."  \n")
   io.stdout:flush()
 
   if (status_code >= 200 and status_code <= 399) then
@@ -155,11 +153,15 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
     end
   end
   
-  if nored[url["url"]] == true or noretry[url["url"]] == true then
-    return wget.actions.EXIT
+  if addedtolist[url["url"]] ~= true or status_code == 302 then
+    added_urls = added_urls + 1
   end
-  
-  if status_code == 405 then
+
+  if status_code == 302 and string.match(url["url"], "https?://downloads%.sourceforge%.net/project/[^%?]+%?") and downloadslist[string.match(url["url"], "(https?://downloads%.sourceforge%.net/project/[^%?]+%?)")] == true then
+    return wget.actions.EXIT
+  elseif status_code == 302 and string.match(url["url"], "https?://downloads%.sourceforge%.net/project/[^%?]+%?") and downloadslist[string.match(url["url"], "(https?://downloads%.sourceforge%.net/project/[^%?]+%?)")] ~= true then
+    downloadslist[string.match(url["url"], "(https?://downloads%.sourceforge%.net/project/[^%?]+%?)")] = true
+  elseif status_code == 405 then
     return wget.actions.EXIT
   elseif status_code >= 500 or
     (status_code >= 400 and status_code ~= 404 and status_code ~= 403 and status_code ~= 400 and status_code ~= 405) then
@@ -184,6 +186,7 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
         return wget.actions.ABORT
       end
     else
+      added_urls = added_urls + 1
       return wget.actions.CONTINUE
     end
   elseif status_code == 0 then
@@ -207,6 +210,7 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
         return wget.actions.ABORT
       end
     else
+      added_urls = added_urls + 1
       return wget.actions.CONTINUE
     end
   end
@@ -214,12 +218,6 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
   tries = 0
 
   local sleep_time = 0
-
-  -- We're okay; sleep a bit (if we have to) and continue
-  if not (string.match(url["url"], "https?://[^%.]+%.googleusercontent%.com") or string.match(url["url"], "/photos/")) then
-    local sleep_time = math.random(2, 4)
-  end
-  -- local sleep_time = 0
 
   --  if string.match(url["host"], "cdn") or string.match(url["host"], "media") then
   --    -- We should be able to go fast on images since that's what a web browser does
