@@ -199,6 +199,8 @@ class WgetArgs(object):
         if item_type == 'project':
             wget_args.append('http://sourceforge.net/projects/{0}/'.format(item_value))
             wget_args.append('http://sourceforge.net/p/{0}/'.format(item_value))
+            wget_args.append('http://sourceforge.net/rest/p/{0}/'.format(item_value))
+            wget_args.append('http://sourceforge.net/rest/p/{0}?doap'.format(item_value))
             wget_args.append('http://{0}.sourceforge.net/'.format(item_value))
         else:
             raise Exception('Unknown item')
