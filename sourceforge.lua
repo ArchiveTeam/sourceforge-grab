@@ -34,11 +34,11 @@ wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_pars
     return false
   end
 
-  if string.match(url, "%?r=http.+%?r=http") or string.match(url, "&r=http.+&r=http") or string.match(url, "%%26r%%3Dhttp.+%%26r%%3Dhttp") or string.match(url, "&r=http.+%%26r%%3Dhttp") or string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com")) or (string.match(url, "/1433869845/_ew_/") and string.match(url, "fsdn%.com")) then
+  if string.match(url, "sourceforge%.net/[^/]+/"..itemvalue.."/report_inappropriate") or string.match(url, "%?r=http.+%?r=http") or string.match(url, "&r=http.+&r=http") or string.match(url, "%%26r%%3Dhttp.+%%26r%%3Dhttp") or string.match(url, "&r=http.+%%26r%%3Dhttp") or string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com")) or (string.match(url, "/1433869845/_ew_/") and string.match(url, "fsdn%.com")) then
     return false
   end
   
-  if (downloaded[url] ~= true or addedtolist[url] ~= true) and not (string.match(url, "%?r=http.+%?r=http") or string.match(url, "&r=http.+&r=http") or string.match(url, "%%26r%%3Dhttp.+%%26r%%3Dhttp") or string.match(url, "&r=http.+%%26r%%3Dhttp") or string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com")) or (string.match(url, "/1433869845/_ew_/") and string.match(url, "fsdn%.com"))) then
+  if (downloaded[url] ~= true or addedtolist[url] ~= true) and not (string.match(url, "sourceforge%.net/[^/]+/"..itemvalue.."/report_inappropriate") or string.match(url, "%?r=http.+%?r=http") or string.match(url, "&r=http.+&r=http") or string.match(url, "%%26r%%3Dhttp.+%%26r%%3Dhttp") or string.match(url, "&r=http.+%%26r%%3Dhttp") or string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com")) or (string.match(url, "/1433869845/_ew_/") and string.match(url, "fsdn%.com"))) then
     if string.match(url, "/p/"..itemvalue) or string.match(url, "/projects/"..itemvalue) or string.match(url, itemvalue.."%.sourceforge%.net") or html == 0 then
       addedtolist[url] = true
       added_urls = added_urls + 1
@@ -55,7 +55,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   local itemvalue = string.gsub(item_value, "%-", "%%%-")
 
   local function check(url)
-    if (downloaded[url] ~= true and addedtolist[url] ~= true) and not (string.match(url, "%?r=http.+%?r=http") or string.match(url, "&r=http.+&r=http") or string.match(url, "%%26r%%3Dhttp.+%%26r%%3Dhttp") or string.match(url, "&r=http.+%%26r%%3Dhttp") or string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com")) or (string.match(url, "/1433869845/_ew_/") and string.match(url, "fsdn%.com"))) then
+    if (downloaded[url] ~= true and addedtolist[url] ~= true) and not (string.match(url, "sourceforge%.net/[^/]+/"..itemvalue.."/report_inappropriate") or string.match(url, "%?r=http.+%?r=http") or string.match(url, "&r=http.+&r=http") or string.match(url, "%%26r%%3Dhttp.+%%26r%%3Dhttp") or string.match(url, "&r=http.+%%26r%%3Dhttp") or string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com")) or (string.match(url, "/1433869845/_ew_/") and string.match(url, "fsdn%.com"))) then
       if string.match(url, "&amp;") then
         table.insert(urls, { url=string.gsub(url, "&amp;", "&") })
         added_urls = added_urls + 1
@@ -67,6 +67,13 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
       	addedtolist[url] = true
       end
     end
+  end
+
+  if string.match(url, "https?://sourceforge%.net/") then
+    check(string.gsub(url, "https?://[^/]+/", string.match(url, "(https?://)").."sf.net/"))
+  end
+  if string.match(url, "https?://[^%.]+%.sourceforge%.net/") then
+    check(string.gsub(url, "https?://[^%.]+%.sourceforge%.net/", string.match(url, "(https?://[^%.]+)%.sourceforge%.net/")..".sf.net/"))
   end
   
   if string.match(url, item_value) then
@@ -90,7 +97,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
 --      end
       for num in string.gmatch(url, "/"..itemvalue.."/[^/]+/([0-9]+)/") do
         local linksort = string.match(url, "/"..itemvalue.."/([^/]+)/[0-9]+/")
-        if not string.match(url, "/"..itemvalue.."/news/") then
+        if not (linksort == "news" or linksort == "discussion" or linksort == "blog") then
           while tonumber(num) >= 0 do
             check("http://sourceforge.net/p/"..item_value.."/"..linksort.."/"..tostring(num).."/")
             num = tonumber(num) - 1
@@ -153,6 +160,10 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
     end
   end
   
+  if url["host"] == "sf.net" or string.match(url["host"], "%.(.+)") == "sf.net" then
+    return wget.actions.EXIT
+  end
+
   if addedtolist[url["url"]] ~= true or status_code == 302 then
     added_urls = added_urls + 1
   end
