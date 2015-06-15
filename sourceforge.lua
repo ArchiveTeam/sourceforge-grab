@@ -6,10 +6,13 @@ local tries = 0
 local added_urls = 5
 local item_type = os.getenv('item_type')
 local item_value = os.getenv('item_value')
+local mainrev = "url"
+local maindiff = "maindiff"
 
 local downloaded = {}
 local addedtolist = {}
 local downloadslist = {}
+local allow = {}
 
 local nored = {}
 local noretry = {}
@@ -34,11 +37,11 @@ wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_pars
     return false
   end
 
-  if string.match(url, "sourceforge%.net/[^/]+/"..itemvalue.."/report_inappropriate") or string.match(url, "%?r=http.+%?r=http") or string.match(url, "&r=http.+&r=http") or string.match(url, "%%26r%%3Dhttp.+%%26r%%3Dhttp") or string.match(url, "&r=http.+%%26r%%3Dhttp") or string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com")) or (string.match(url, "/1433869845/_ew_/") and string.match(url, "fsdn%.com")) then
+  if (string.match(url, maindiff) and not string.match(url, "https?://[^/]+/[^/]+/[^/]+/[^/]+/[^/]+/master/tree/")) or (string.match(url, maindiff) and not string.match(url, "https?://[^/]+/[^/]+/[^/]+/[^/]+/HEAD/tree/")) or string.match(url, "&amp;diformat=") or string.match(url, "&diformat=") or string.match(url, "sourceforge%.net/[^/]+/"..itemvalue.."/report_inappropriate") or string.match(url, "%?r=http.+%?r=http") or string.match(url, "&r=http.+&r=http") or string.match(url, "%%26r%%3Dhttp.+%%26r%%3Dhttp") or string.match(url, "&r=http.+%%26r%%3Dhttp") or string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com")) or (string.match(url, "/1433869845/_ew_/") and string.match(url, "fsdn%.com")) then
     return false
   end
   
-  if (downloaded[url] ~= true or addedtolist[url] ~= true) and not (string.match(url, "sourceforge%.net/[^/]+/"..itemvalue.."/report_inappropriate") or string.match(url, "%?r=http.+%?r=http") or string.match(url, "&r=http.+&r=http") or string.match(url, "%%26r%%3Dhttp.+%%26r%%3Dhttp") or string.match(url, "&r=http.+%%26r%%3Dhttp") or string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com")) or (string.match(url, "/1433869845/_ew_/") and string.match(url, "fsdn%.com"))) then
+  if (downloaded[url] ~= true or addedtolist[url] ~= true) and not ((string.match(url, maindiff) and not string.match(url, "https?://[^/]+/[^/]+/[^/]+/[^/]+/[^/]+/master/tree/")) or (string.match(url, maindiff) and not string.match(url, "https?://[^/]+/[^/]+/[^/]+/[^/]+/HEAD/tree/")) or string.match(url, "&diformat=") or string.match(url, "&amp;diformat=") or string.match(url, "sourceforge%.net/[^/]+/"..itemvalue.."/report_inappropriate") or string.match(url, "%?r=http.+%?r=http") or string.match(url, "&r=http.+&r=http") or string.match(url, "%%26r%%3Dhttp.+%%26r%%3Dhttp") or string.match(url, "&r=http.+%%26r%%3Dhttp") or string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com")) or (string.match(url, "/1433869845/_ew_/") and string.match(url, "fsdn%.com"))) then
     if string.match(url, "/p/"..itemvalue) or string.match(url, "/projects/"..itemvalue) or string.match(url, itemvalue.."%.sourceforge%.net") or html == 0 then
       addedtolist[url] = true
       added_urls = added_urls + 1
@@ -55,7 +58,18 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   local itemvalue = string.gsub(item_value, "%-", "%%%-")
 
   local function check(url)
-    if (downloaded[url] ~= true and addedtolist[url] ~= true) and not (string.match(url, "sourceforge%.net/[^/]+/"..itemvalue.."/report_inappropriate") or string.match(url, "%?r=http.+%?r=http") or string.match(url, "&r=http.+&r=http") or string.match(url, "%%26r%%3Dhttp.+%%26r%%3Dhttp") or string.match(url, "&r=http.+%%26r%%3Dhttp") or string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com")) or (string.match(url, "/1433869845/_ew_/") and string.match(url, "fsdn%.com"))) then
+    if (string.match(url, maindiff) and (string.match(url, "%?barediff=") or string.match(url, "%?diff=")) and not (string.match(url, "https?://[^/]+/[^/]+/[^/]+/[^/]+/[^/]+/master/tree/") or string.match(url, "https?://[^/]+/[^/]+/[^/]+/[^/]+/HEAD/tree/") or maindiff == "maindiff" or string.match(url, "&amp;diformat="))) or (string.match(url, maindiff) and (string.match(url, "https?://[^/]+/[^/]+/[^/]+/[^/]+/[^/]+/master/tree/") or string.match(url, "https?://[^/]+/[^/]+/[^/]+/[^/]+/HEAD/tree/"))) then
+      if string.match(url, "&amp;") then
+        table.insert(urls, { url=string.gsub(url, "&amp;", "&") })
+        added_urls = added_urls + 1
+        addedtolist[url] = true
+        addedtolist[string.gsub(url, "&amp;", "&")] = true
+      else
+        added_urls = added_urls + 1
+      	table.insert(urls, { url=url })
+      	addedtolist[url] = true
+      end
+    elseif (downloaded[url] ~= true and addedtolist[url] ~= true) and not ((string.match(url, maindiff) and not string.match(url, "https?://[^/]+/[^/]+/[^/]+/[^/]+/[^/]+/master/tree/")) or (string.match(url, maindiff) and not string.match(url, "https?://[^/]+/[^/]+/[^/]+/[^/]+/HEAD/tree/")) or string.match(url, "&amp;diformat=") or string.match(url, "sourceforge%.net/[^/]+/"..itemvalue.."/report_inappropriate") or string.match(url, "%?r=http.+%?r=http") or string.match(url, "&r=http.+&r=http") or string.match(url, "%%26r%%3Dhttp.+%%26r%%3Dhttp") or string.match(url, "&r=http.+%%26r%%3Dhttp") or string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com")) or (string.match(url, "/1433869845/_ew_/") and string.match(url, "fsdn%.com"))) then
       if string.match(url, "&amp;") then
         table.insert(urls, { url=string.gsub(url, "&amp;", "&") })
         added_urls = added_urls + 1
@@ -75,10 +89,17 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   if string.match(url, "https?://[^%.]+%.sourceforge%.net/") then
     check(string.gsub(url, "https?://[^%.]+%.sourceforge%.net/", string.match(url, "(https?://[^%.]+)%.sourceforge%.net/")..".sf.net/"))
   end
-  
+
   if string.match(url, item_value) then
     if string.match(url, "/p/"..itemvalue) or string.match(url, "/projects/"..itemvalue) or string.match(url, itemvalue.."%.sourceforge%.net") then
       html = read_file(file)
+      if string.match(url, itemvalue.."/[^/]+/[^/]+/master/tree") and maindiff == "maindiff" then
+        mainrev = string.gsub(string.match(url, "(https?://.+/[^/]+/[^/]+/master/tree/)"), "%-", "%%%-")
+        maindiff = "https?://[^/]+/p/"..itemvalue..string.gsub(string.match(url, "https?://[^/]+/p/[^/]+(/[^/]+/[^/]+/)"), "%-", "%%%-").."[A-Za-z0-9]+/tree/"
+      elseif string.match(url, itemvalue.."/[^/]+/HEAD/tree") and maindiff == "maindiff" then
+        mainrev = string.gsub(string.match(url, "(https?://.+/[^/]+/HEAD/tree/)"), "%-", "%%%-")
+        maindiff = "https?://[^/]+/p/"..itemvalue..string.gsub(string.match(url, "https?://[^/]+/p/[^/]+(/[^/]+/)"), "%-", "%%%-").."[A-Za-z0-9]+/tree/"
+      end
       if string.match(string.match(url, "(https?://.+/)"), itemvalue) and not string.match(url, "https?://[a-z]+%.fsdn%.com") then
         noretry[string.match(url, "(https?://.+/)")] = true
         check(string.match(url, "(https?://.+/)"))
@@ -101,6 +122,17 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
           while tonumber(num) >= 0 do
             check("http://sourceforge.net/p/"..item_value.."/"..linksort.."/"..tostring(num).."/")
             num = tonumber(num) - 1
+          end
+        end
+      end
+      for newurl in string.gmatch(html, '<a href=("[^"]+)">') do
+        if not (string.match(newurl, '"https?://') or string.match(newurl, '"/') or string.match(newurl, '"#')) then
+          if string.match(newurl, '"%?') and string.match(url, "%?") then
+            check(string.match(url, "(https?://.+)%?")..string.match(newurl, '"(.+)'))
+          elseif string.match(newurl, '"%?') and not string.match(url, "%?") then
+            check(url..string.match(newurl, '"(.+)'))
+          elseif not string.match(newurl, '"%?') then
+            check(string.match(url, "(https?://.+/)")..string.match(newurl, '"(.+)'))
           end
         end
       end
