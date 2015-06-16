@@ -3,7 +3,7 @@ dofile("table_show.lua")
 
 local url_count = 0
 local tries = 0
-local added_urls = 5
+local added_urls = 0
 local item_type = os.getenv('item_type')
 local item_value = os.getenv('item_value')
 local mainrev = "url"
@@ -42,7 +42,7 @@ wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_pars
   end
   
   if (downloaded[url] ~= true or addedtolist[url] ~= true) and not ((string.match(url, maindiff) and not string.match(url, "https?://[^/]+/[^/]+/[^/]+/[^/]+/[^/]+/master/tree/")) or (string.match(url, maindiff) and not string.match(url, "https?://[^/]+/[^/]+/[^/]+/[^/]+/HEAD/tree/")) or string.match(url, "&diformat=") or string.match(url, "%?force=True") or string.match(url, "&amp;diformat=") or string.match(url, "sourceforge%.net/[^/]+/"..itemvalue.."/report_inappropriate") or string.match(url, "%?r=http.+%?r=http") or string.match(url, "&r=http.+&r=http") or string.match(url, "%%26r%%3Dhttp.+%%26r%%3Dhttp") or string.match(url, "&r=http.+%%26r%%3Dhttp") or string.match(url, "&amp;stars=") or string.match(url, "&stars=") or string.match(url, "%?stars=") or string.match(url, "%%3E") or string.match(url, ">") or (string.match(url, "/_static_/") and string.match(url, "fsdn%.com")) or (string.match(url, "/1433869845/_ew_/") and string.match(url, "fsdn%.com"))) then
-    if string.match(url, "/p/"..itemvalue) or string.match(url, "/project/"..itemvalue) or string.match(url, "/projects/"..itemvalue) or string.match(url, itemvalue.."%.sourceforge%.net") or html == 0 then
+    if string.match(url, "/p/"..itemvalue) or string.match(url, "/project/"..itemvalue) or string.match(url, "/projects/"..itemvalue) or string.match(url, itemvalue.."%.sourceforge%.net") or string.match(url, itemvalue.."%.[^%.]+%.sourceforge%.net") or html == 0 then
       addedtolist[url] = true
       added_urls = added_urls + 1
       return true
@@ -91,7 +91,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
 --  end
 
   if string.match(url, itemvalue) then
-    if string.match(url, "/p/"..itemvalue) or string.match(url, "/projects/"..itemvalue) or string.match(url, itemvalue.."%.sourceforge%.net") then
+    if string.match(url, "/p/"..itemvalue) or string.match(url, "/projects/"..itemvalue) or string.match(url, itemvalue.."%.sourceforge%.net") or string.match(url, itemvalue.."%.[^%.]+%.sourceforge%.net") then
       html = read_file(file)
       if string.match(url, itemvalue.."/[^/]+/[^/]+/master/tree") and maindiff == "maindiff" then
         mainrev = string.gsub(string.match(url, "(https?://.+/[^/]+/[^/]+/master/tree/)"), "%-", "%%%-")
@@ -142,7 +142,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
             check(string.gsub(newurl, '"//', 'http://'))
           end
         elseif string.match(newurl, itemvalue) then
-          check("http://sourceforge.net"..string.match(newurl, '"(/.+)'))
+          check(string.match(url, "(https?://[^/]+)/")..string.match(newurl, '"(/.+)'))
         end
       end
       for newurl in string.gmatch(html, "('/[^']+)'") do
@@ -151,7 +151,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
             check(string.gsub(newurl, "'//", "http://"))
           end
         elseif string.match(newurl, itemvalue) then
-          check("http://sourceforge.net"..string.match(newurl, "'(/.+)"))
+          check(string.match(url, "(https?://[^/]+)/")..string.match(newurl, "'(/.+)"))
         end
       end
       for newurl in string.gmatch(html, '"(https?://[^"]+)"') do
@@ -241,7 +241,7 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
     tries = tries + 1
 
     if tries >= 10 then
-      if noretry[url["url"]] == true or not (string.match(url["url"], "https?://sourceforge%.net") or string.match(url["url"], "https?://[^%.]+%.sourceforge%.net")) then
+      if noretry[url["url"]] == true or not (string.match(url["url"], "https?://sourceforge%.net") or string.match(url["url"], "https?://[^%.]+%.sourceforge%.net") or string.match(url["url"], "https?://[^%.]+%.[^%.]+%.sourceforge%.net")) then
         io.stdout:write("\nSkipping this url...\n")
         io.stdout:flush()
         tries = 0
