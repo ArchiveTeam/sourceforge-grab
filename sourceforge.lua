@@ -95,10 +95,10 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
       html = read_file(file)
       if string.match(url, itemvalue.."/[^/]+/[^/]+/master/tree") and maindiff == "maindiff" then
         mainrev = string.gsub(string.match(url, "(https?://.+/[^/]+/[^/]+/master/tree/)"), "%-", "%%%-")
-        maindiff = "https?://[^/]+/p/"..itemvalue..string.gsub(string.match(url, "https?://[^/]+/p/[^/]+(/[^/]+/[^/]+/)"), "%-", "%%%-").."[A-Za-z0-9]+/tree/"
+        maindiff = "https?://[^/]+/p/"..itemvalue.."/[A-Za-z0-9%-]+/"..string.gsub(string.match(url, "https?://[^/]+/p/[^/]+/[^/]+/([^/]+/)"), "%-", "%%%-").."[A-Za-z0-9]+/tree/"
       elseif string.match(url, itemvalue.."/[^/]+/HEAD/tree") and maindiff == "maindiff" then
         mainrev = string.gsub(string.match(url, "(https?://.+/[^/]+/HEAD/tree/)"), "%-", "%%%-")
-        maindiff = "https?://[^/]+/p/"..itemvalue..string.gsub(string.match(url, "https?://[^/]+/p/[^/]+(/[^/]+/)"), "%-", "%%%-").."[A-Za-z0-9]+/tree/"
+        maindiff = "https?://[^/]+/p/"..itemvalue.."/[A-Za-z0-9%-]+/".."[A-Za-z0-9]+/tree/"
       end
       if string.match(string.match(url, "(https?://.+/)"), itemvalue) and not string.match(url, "https?://[a-z]+%.fsdn%.com") then
         noretry[string.match(url, "(https?://.+/)")] = true
