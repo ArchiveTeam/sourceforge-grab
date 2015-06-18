@@ -90,7 +90,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
 --    check(string.gsub(url, "https?://[^%.]+%.sourceforge%.net/", string.match(url, "(https?://[^%.]+)%.sourceforge%.net/")..".sf.net/"))
 --  end
 
-  if string.match(url, itemvalue) then
+  if string.match(url, itemvalue) and not string.match(url, "https?://[^%.]+%.dl%.sourceforge%.net/") then
     if string.match(url, "/p/"..itemvalue) or string.match(url, "/projects/"..itemvalue) or string.match(url, "/project/"..itemvalue) or string.match(url, itemvalue.."%.sourceforge%.net") or string.match(url, itemvalue.."%.[^%.]+%.sourceforge%.net") then
       html = read_file(file)
       if string.match(url, itemvalue.."/[^/]+/[^/]+/master/tree") and maindiff == "maindiff" then
