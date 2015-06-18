@@ -57,7 +57,7 @@ if not WGET_LUA:
 #
 # Update this each time you make a non-cosmetic change.
 # It will be added to the WARC files and reported to the tracker.
-VERSION = "20150611.01"
+VERSION = "20150618.01"
 USER_AGENT = 'ArchiveTeam'
 TRACKER_ID = 'sourceforge'
 TRACKER_HOST = 'tracker.archiveteam.org'
@@ -178,7 +178,7 @@ class WgetArgs(object):
             "--page-requisites",
             "--timeout", "30",
             "--tries", "inf",
-            "--domains", "google.com",
+            "--domains", "sourceforge.net",
             "--span-hosts",
             "--waitretry", "30",
             "--warc-file", ItemInterpolation("%(item_dir)s/%(warc_file_base)s"),
