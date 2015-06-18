@@ -224,7 +224,7 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
     tries = tries + 1
 
     if tries >= 10 then
-      if string.match(url["url"], "fsdn%.com") or noretry[url["url"]] == true then
+      if noretry[url["url"]] == true or not string.match(url["host"], "sourceforge%.net") then
         io.stdout:write("\nSkipping this url...\n")
         io.stdout:flush()
         tries = 0
@@ -248,7 +248,7 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
     tries = tries + 1
 
     if tries >= 10 then
-      if noretry[url["url"]] == true or not (string.match(url["url"], "https?://sourceforge%.net") or string.match(url["url"], "https?://[^%.]+%.sourceforge%.net") or string.match(url["url"], "https?://[^%.]+%.[^%.]+%.sourceforge%.net")) then
+      if noretry[url["url"]] == true or not string.match(url["host"], "sourceforge%.net") then
         io.stdout:write("\nSkipping this url...\n")
         io.stdout:flush()
         tries = 0
