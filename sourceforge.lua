@@ -104,6 +104,9 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
         noretry[string.match(url, "(https?://.+/)")] = true
         check(string.match(url, "(https?://.+/)"))
       end
+      if string.match(url, "%?") then
+        check(string.match(url, "(https?://[^%?]+)%?"))
+      end
       if string.match(url, "(https?://.+/)[^/]+/") and string.match(string.match(url, "(https?://.+/)[^/]+/"), itemvalue) and not string.match(url, "https?://[a-z]+%.fsdn%.com") then
         noretry[string.match(url, "(https?://.+/)[^/]+/")] = true
         check(string.match(url, "(https?://.+/)[^/]+/"))
@@ -198,6 +201,10 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
 
   if addedtolist[url["url"]] ~= true or status_code == 302 then
     added_urls = added_urls + 1
+  end
+  
+  if status_code == 301 and string.match(url["url"], "https?://sourceforge.net/downloads") and not string.match(url["url"], "https?://sourceforge.net/downloads.") then
+    return wget.actions.EXIT
   end
 
   if status_code == 302 and string.match(url["url"], "https?://downloads%.sourceforge%.net/project/[^%?]+%?") and downloadslist[string.match(url["url"], "(https?://downloads%.sourceforge%.net/project/[^%?]+%?)")] == true then
